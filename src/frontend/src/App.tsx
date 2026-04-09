@@ -5,6 +5,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import LoginPage from "./components/LoginPage";
 import { useAuth } from "./hooks/useAuth";
@@ -16,7 +17,6 @@ const rootRoute = createRootRoute({
 });
 
 import AddStudentPage from "./pages/AddStudentPage";
-// Lazy-loaded pages — using dynamic imports inline
 import DashboardPage from "./pages/DashboardPage";
 import StudentDetailPage from "./pages/StudentDetailPage";
 import StudentsListPage from "./pages/StudentsListPage";
@@ -71,9 +71,35 @@ declare module "@tanstack/react-router" {
 // ─── Root component (auth gate) ───────────────────────────────────────────────
 
 function AppRoot() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, loginStatus } = useAuth();
 
-  if (isLoading) {
+  // Safety net: if we've been "loading" for more than 5 seconds but loginStatus
+  // is idle or error (not actually initializing), stop showing the spinner and
+  // fall through to the login page. This prevents an infinite loading state on
+  // the live deployed app where the hook may not transition cleanly.
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setLoadingTimedOut(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // Show spinner only during genuine initialization/login attempts,
+  // never indefinitely.
+  const showSpinner =
+    isLoading &&
+    !loadingTimedOut &&
+    (loginStatus === "initializing" ||
+      loginStatus === "logging-in" ||
+      isLoading);
+
+  if (showSpinner) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -81,7 +107,7 @@ function AppRoot() {
       >
         <div className="flex flex-col items-center gap-3">
           <div
-            className="h-10 w-10 rounded-full border-4 border-t-transparent animate-spin"
+            className="h-10 w-10 rounded-full border-4 animate-spin"
             style={{
               borderColor: "oklch(0.72 0.18 55)",
               borderTopColor: "transparent",

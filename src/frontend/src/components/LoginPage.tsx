@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { BookOpen, GraduationCap, ShieldCheck, Users } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  GraduationCap,
+  Loader2,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const features = [
@@ -10,7 +17,10 @@ const features = [
 ];
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, loginError, loginStatus } = useAuth();
+
+  // Disabled when local flag OR the underlying hook says it's actively logging in.
+  const isLoggingIn = isLoading || loginStatus === "logging-in";
 
   return (
     <div
@@ -83,18 +93,53 @@ export default function LoginPage() {
               ))}
             </div>
 
+            {/* Error message — min-h reserves layout space to prevent button jump */}
+            <div
+              className="mb-4 min-h-[2.5rem]"
+              role="alert"
+              aria-live="polite"
+              data-ocid="login-error"
+            >
+              {loginError && (
+                <div
+                  className="flex items-start gap-2 rounded-lg px-4 py-3 text-sm"
+                  style={{
+                    background: "oklch(0.25 0.08 20)",
+                    color: "oklch(0.88 0.08 25)",
+                    border: "1px solid oklch(0.45 0.14 20)",
+                  }}
+                >
+                  <AlertCircle
+                    className="h-4 w-4 mt-0.5 flex-shrink-0"
+                    aria-hidden
+                  />
+                  <span>{loginError}</span>
+                </div>
+              )}
+            </div>
+
             {/* Login button */}
             <Button
               onClick={login}
-              disabled={isLoading}
-              className="w-full py-3 text-base font-semibold transition-smooth disabled:opacity-50"
+              disabled={isLoggingIn}
+              className="w-full py-3 text-base font-semibold transition-smooth disabled:opacity-60"
               style={{
-                background: "oklch(0.62 0.18 55)",
+                background: isLoggingIn
+                  ? "oklch(0.52 0.14 55)"
+                  : "oklch(0.62 0.18 55)",
                 color: "oklch(0.15 0.05 245)",
               }}
               data-ocid="login-btn"
+              aria-busy={isLoggingIn}
             >
-              {isLoading ? "Connecting..." : "Login with Internet Identity"}
+              {isLoggingIn ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  Logging in...
+                </span>
+              ) : (
+                "Login with Internet Identity"
+              )}
             </Button>
 
             <p
@@ -102,6 +147,12 @@ export default function LoginPage() {
               style={{ color: "oklch(0.55 0.04 245)" }}
             >
               Authorized staff only. Powered by Internet Identity.
+            </p>
+            <p
+              className="mt-2 text-center text-xs"
+              style={{ color: "oklch(0.48 0.04 245)" }}
+            >
+              Make sure pop-ups are allowed in your browser for this site.
             </p>
           </div>
         </Card>
