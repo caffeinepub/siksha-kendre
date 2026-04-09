@@ -5,21 +5,23 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import LoginPage from "./components/LoginPage";
+import StaffManagement from "./components/StaffManagement";
 import { useAuth } from "./hooks/useAuth";
 
-// ─── Route tree ──────────────────────────────────────────────────────────────
-
-const rootRoute = createRootRoute({
-  component: AppRoot,
-});
+// ─── Pages ────────────────────────────────────────────────────────────────────
 
 import AddStudentPage from "./pages/AddStudentPage";
 import DashboardPage from "./pages/DashboardPage";
 import StudentDetailPage from "./pages/StudentDetailPage";
 import StudentsListPage from "./pages/StudentsListPage";
+
+// ─── Route tree ───────────────────────────────────────────────────────────────
+
+const rootRoute = createRootRoute({
+  component: AppRoot,
+});
 
 const layoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -51,12 +53,19 @@ const studentDetailRoute = createRoute({
   component: StudentDetailPage,
 });
 
+const staffRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/staff",
+  component: StaffManagement,
+});
+
 const routeTree = rootRoute.addChildren([
   layoutRoute.addChildren([
     indexRoute,
     studentsRoute,
     addStudentRoute,
     studentDetailRoute,
+    staffRoute,
   ]),
 ]);
 
@@ -71,35 +80,9 @@ declare module "@tanstack/react-router" {
 // ─── Root component (auth gate) ───────────────────────────────────────────────
 
 function AppRoot() {
-  const { isAuthenticated, isLoading, loginStatus } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Safety net: if we've been "loading" for more than 5 seconds but loginStatus
-  // is idle or error (not actually initializing), stop showing the spinner and
-  // fall through to the login page. This prevents an infinite loading state on
-  // the live deployed app where the hook may not transition cleanly.
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setLoadingTimedOut(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setLoadingTimedOut(true);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [isLoading]);
-
-  // Show spinner only during genuine initialization/login attempts,
-  // never indefinitely.
-  const showSpinner =
-    isLoading &&
-    !loadingTimedOut &&
-    (loginStatus === "initializing" ||
-      loginStatus === "logging-in" ||
-      isLoading);
-
-  if (showSpinner) {
+  if (isLoading) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"

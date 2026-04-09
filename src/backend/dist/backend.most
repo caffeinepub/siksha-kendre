@@ -1,4 +1,4 @@
-// Version: 1.0.0
+// Version: 3.0.0
 type AdmissionFee__32002297 =
   {
     paymentMethod : ?PaymentMethod__814595932;
@@ -9,6 +9,13 @@ type Data__791452850<K, V> =
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type List__415060402<T> = List__790383201<T>;
+type List__790383201<T> =
+  {
+    var blockIndex : Nat__490723111;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__490723111
+  };
 type Map__158565046<K, V> = Map__297112838<K, V>;
 type Map__297112838<K, V> =
   {var root : Node__46230540<K, V>; var size : Nat__490723111};
@@ -32,10 +39,17 @@ type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type OldAccessControlState__841599830 =
+  {
+    var initialized : Bool;
+    roles : Map__605269027<Principal, OldUserRole__889293160>
+  };
+type OldUserRole__889293160 = {#admin; #guest; #user};
 type PaymentMethod__46913440 = {#Cash; #UPI};
 type PaymentMethod__814595932 = PaymentMethod__46913440;
 type PaymentStatus__1050999476 = {#Paid; #Pending};
 type PaymentStatus__487580874 = PaymentStatus__1050999476;
+type SessionInfo__942322948 = {role : UserRole__451090586; username : Text};
 type StudentClass__296768066 =
   {#Class1; #Class2; #Class3; #Class4; #Class5; #Nursery};
 type StudentClass__773133380 = StudentClass__296768066;
@@ -53,12 +67,27 @@ type Student__26715999 =
     var motherName : Text;
     var name : Text
   };
-type UserRole__78968553 = {#admin; #guest; #user};
-actor {
-  stable accessControlState :
+type UserAccount__525292681 =
+  {var passwordHash : Text; role : UserRole__451090586; username : Text};
+type UserRole__451090586 = {#admin; #staff};
+actor ({
+  in accessControlState : OldAccessControlState__841599830;
+  stable authState :
     {
-      var initialized : Bool;
-      roles : Map__605269027<Principal, UserRole__78968553>
+      var adminExists : Bool;
+      sessions : Map__605269027<Text, SessionInfo__942322948>;
+      var tokenCounter : Nat;
+      users : Map__605269027<Text, UserAccount__525292681>
+    };
+  in nextStudentId : {var value : Nat};
+  in students : List__415060402<Student__26715999>
+}, {
+  stable authState :
+    {
+      var adminExists : Bool;
+      sessions : Map__605269027<Text, SessionInfo__942322948>;
+      var tokenCounter : Nat;
+      users : Map__605269027<Text, UserAccount__525292681>
     };
   stable nextStudentId : {var value : Nat};
   stable students :
@@ -67,4 +96,4 @@ actor {
       var blocks : [var [var ?Student__26715999]];
       var elementIndex : Nat__490723111
     }
-};
+}) ;

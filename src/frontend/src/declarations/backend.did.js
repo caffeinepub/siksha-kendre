@@ -8,11 +8,7 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
-});
+export const AuthResult = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
 export const StudentClass = IDL.Variant({
   'Class1' : IDL.Null,
   'Class2' : IDL.Null,
@@ -67,6 +63,15 @@ export const StudentPublic = IDL.Record({
   'fatherName' : IDL.Text,
   'monthlyFees' : MonthlyFee,
 });
+export const UserRole = IDL.Variant({ 'admin' : IDL.Null, 'staff' : IDL.Null });
+export const SessionInfo = IDL.Record({
+  'username' : IDL.Text,
+  'role' : UserRole,
+});
+export const StaffInfo = IDL.Record({
+  'username' : IDL.Text,
+  'role' : UserRole,
+});
 export const UpdateStudentRequest = IDL.Record({
   'id' : StudentId,
   'dateOfBirth' : IDL.Text,
@@ -78,34 +83,42 @@ export const UpdateStudentRequest = IDL.Record({
 });
 
 export const idlService = IDL.Service({
-  'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createStudent' : IDL.Func([CreateStudentRequest], [StudentPublic], []),
-  'deleteStudent' : IDL.Func([StudentId], [IDL.Bool], []),
-  'getMyRole' : IDL.Func([], [UserRole], ['query']),
-  'getStudent' : IDL.Func([StudentId], [IDL.Opt(StudentPublic)], ['query']),
-  'listStudents' : IDL.Func([], [IDL.Vec(StudentPublic)], ['query']),
-  'login' : IDL.Func([], [UserRole], []),
+  'createStaff' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [AuthResult], []),
+  'createStudent' : IDL.Func(
+      [IDL.Text, CreateStudentRequest],
+      [StudentPublic],
+      [],
+    ),
+  'deleteStaff' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+  'deleteStudent' : IDL.Func([IDL.Text, StudentId], [IDL.Bool], []),
+  'getSession' : IDL.Func([IDL.Text], [IDL.Opt(SessionInfo)], ['query']),
+  'getStudent' : IDL.Func(
+      [IDL.Text, StudentId],
+      [IDL.Opt(StudentPublic)],
+      ['query'],
+    ),
+  'listStaff' : IDL.Func([IDL.Text], [IDL.Vec(StaffInfo)], ['query']),
+  'listStudents' : IDL.Func([IDL.Text], [IDL.Vec(StudentPublic)], ['query']),
+  'login' : IDL.Func([IDL.Text, IDL.Text], [AuthResult], []),
+  'logout' : IDL.Func([IDL.Text], [], []),
   'setAdmissionFeeStatus' : IDL.Func(
-      [StudentId, PaymentStatus, IDL.Opt(PaymentMethod)],
+      [IDL.Text, StudentId, PaymentStatus, IDL.Opt(PaymentMethod)],
       [IDL.Bool],
       [],
     ),
   'setMonthlyFeeStatus' : IDL.Func(
-      [StudentId, IDL.Text, PaymentStatus],
+      [IDL.Text, StudentId, IDL.Text, PaymentStatus],
       [IDL.Bool],
       [],
     ),
-  'updateStudent' : IDL.Func([UpdateStudentRequest], [IDL.Bool], []),
+  'signup' : IDL.Func([IDL.Text, IDL.Text], [AuthResult], []),
+  'updateStudent' : IDL.Func([IDL.Text, UpdateStudentRequest], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
-  });
+  const AuthResult = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const StudentClass = IDL.Variant({
     'Class1' : IDL.Null,
     'Class2' : IDL.Null,
@@ -157,6 +170,9 @@ export const idlFactory = ({ IDL }) => {
     'fatherName' : IDL.Text,
     'monthlyFees' : MonthlyFee,
   });
+  const UserRole = IDL.Variant({ 'admin' : IDL.Null, 'staff' : IDL.Null });
+  const SessionInfo = IDL.Record({ 'username' : IDL.Text, 'role' : UserRole });
+  const StaffInfo = IDL.Record({ 'username' : IDL.Text, 'role' : UserRole });
   const UpdateStudentRequest = IDL.Record({
     'id' : StudentId,
     'dateOfBirth' : IDL.Text,
@@ -168,24 +184,40 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
-    'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createStudent' : IDL.Func([CreateStudentRequest], [StudentPublic], []),
-    'deleteStudent' : IDL.Func([StudentId], [IDL.Bool], []),
-    'getMyRole' : IDL.Func([], [UserRole], ['query']),
-    'getStudent' : IDL.Func([StudentId], [IDL.Opt(StudentPublic)], ['query']),
-    'listStudents' : IDL.Func([], [IDL.Vec(StudentPublic)], ['query']),
-    'login' : IDL.Func([], [UserRole], []),
+    'createStaff' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [AuthResult], []),
+    'createStudent' : IDL.Func(
+        [IDL.Text, CreateStudentRequest],
+        [StudentPublic],
+        [],
+      ),
+    'deleteStaff' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'deleteStudent' : IDL.Func([IDL.Text, StudentId], [IDL.Bool], []),
+    'getSession' : IDL.Func([IDL.Text], [IDL.Opt(SessionInfo)], ['query']),
+    'getStudent' : IDL.Func(
+        [IDL.Text, StudentId],
+        [IDL.Opt(StudentPublic)],
+        ['query'],
+      ),
+    'listStaff' : IDL.Func([IDL.Text], [IDL.Vec(StaffInfo)], ['query']),
+    'listStudents' : IDL.Func([IDL.Text], [IDL.Vec(StudentPublic)], ['query']),
+    'login' : IDL.Func([IDL.Text, IDL.Text], [AuthResult], []),
+    'logout' : IDL.Func([IDL.Text], [], []),
     'setAdmissionFeeStatus' : IDL.Func(
-        [StudentId, PaymentStatus, IDL.Opt(PaymentMethod)],
+        [IDL.Text, StudentId, PaymentStatus, IDL.Opt(PaymentMethod)],
         [IDL.Bool],
         [],
       ),
     'setMonthlyFeeStatus' : IDL.Func(
-        [StudentId, IDL.Text, PaymentStatus],
+        [IDL.Text, StudentId, IDL.Text, PaymentStatus],
         [IDL.Bool],
         [],
       ),
-    'updateStudent' : IDL.Func([UpdateStudentRequest], [IDL.Bool], []),
+    'signup' : IDL.Func([IDL.Text, IDL.Text], [AuthResult], []),
+    'updateStudent' : IDL.Func(
+        [IDL.Text, UpdateStudentRequest],
+        [IDL.Bool],
+        [],
+      ),
   });
 };
 

@@ -1,21 +1,23 @@
 {
-  "overview": "Admission management system for Adarsh Siksha Kendre, Bajra, Mandar, Ranchi (Est. 2005). Manage student records, track admission and monthly class fees, and control access for authorized staff.",
+  "overview": "Admission management system for Adarsh Siksha Kendre, Bajra, Mandar, Ranchi (Est. 2005). Manages student records, admission fees, and monthly class fees with username/password staff login.",
   "features": [
-    "Staff login via Internet Identity",
-    "Student records — editable name, mobile, DOB, father's/mother's name, class",
-    "Classes: Nursery, Class 1–5",
-    "Admission fee ₹300 — PhonePe QR + Cash option, manually marked Paid/Pending",
-    "Monthly class fee tracker — 12 months per student with Paid/Pending status",
+    "Username/password signup and login for staff",
+    "Admin and staff roles",
+    "Admin can create staff accounts",
+    "Student record management (add, edit, view)",
+    "Admission fee tracking with UPI/Cash payment",
+    "Monthly class fee tracking (Jan–Dec)",
     "Search and filter students by name or mobile number",
     "School branding in header"
   ],
-  "category": "productivity",
+  "category": "education",
   "tags": [
     "school",
     "admission",
-    "fee-management",
-    "student-records",
+    "students",
+    "fees",
+    "management",
     "education"
   ],
-  "last_updated": "2026-04-09T09:07:28.285Z"
+  "last_updated": "2026-04-09T11:56:51.605Z"
 }

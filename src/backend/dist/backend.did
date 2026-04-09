@@ -1,8 +1,7 @@
 type UserRole = 
  variant {
    admin;
-   guest;
-   user;
+   staff;
  };
 type UpdateStudentRequest = 
  record {
@@ -35,6 +34,16 @@ type StudentClass =
    Class4;
    Class5;
    Nursery;
+ };
+type StaffInfo = 
+ record {
+   role: UserRole;
+   username: text;
+ };
+type SessionInfo = 
+ record {
+   role: UserRole;
+   username: text;
  };
 type PaymentStatus = 
  variant {
@@ -70,22 +79,32 @@ type CreateStudentRequest =
    motherName: text;
    name: text;
  };
+type AuthResult = 
+ variant {
+   err: text;
+   ok: text;
+ };
 type AdmissionFee = 
  record {
    paymentMethod: opt PaymentMethod;
    status: PaymentStatus;
  };
 service : {
-  assignRole: (user: principal, role: UserRole) -> ();
-  createStudent: (req: CreateStudentRequest) -> (StudentPublic);
-  deleteStudent: (id: StudentId) -> (bool);
-  getMyRole: () -> (UserRole) query;
-  getStudent: (id: StudentId) -> (opt StudentPublic) query;
-  listStudents: () -> (vec StudentPublic) query;
-  login: () -> (UserRole);
-  setAdmissionFeeStatus: (id: StudentId, status: PaymentStatus,
+  createStaff: (adminToken: text, username: text, password: text) ->
+   (AuthResult);
+  createStudent: (token: text, req: CreateStudentRequest) -> (StudentPublic);
+  deleteStaff: (adminToken: text, username: text) -> (bool);
+  deleteStudent: (token: text, id: StudentId) -> (bool);
+  getSession: (token: text) -> (opt SessionInfo) query;
+  getStudent: (token: text, id: StudentId) -> (opt StudentPublic) query;
+  listStaff: (adminToken: text) -> (vec StaffInfo) query;
+  listStudents: (token: text) -> (vec StudentPublic) query;
+  login: (username: text, password: text) -> (AuthResult);
+  logout: (token: text) -> ();
+  setAdmissionFeeStatus: (token: text, id: StudentId, status: PaymentStatus,
    paymentMethod: opt PaymentMethod) -> (bool);
-  setMonthlyFeeStatus: (id: StudentId, month: text, status: PaymentStatus) ->
-   (bool);
-  updateStudent: (req: UpdateStudentRequest) -> (bool);
+  setMonthlyFeeStatus: (token: text, id: StudentId, month: text, status:
+   PaymentStatus) -> (bool);
+  signup: (username: text, password: text) -> (AuthResult);
+  updateStudent: (token: text, req: UpdateStudentRequest) -> (bool);
 }

@@ -1,13 +1,47 @@
-import type { backendInterface } from "../backend";
+import type { AuthResult, backendInterface, SessionInfo, StaffInfo } from "../backend";
 import { PaymentMethod, PaymentStatus, StudentClass, UserRole } from "../backend";
-import type { Principal } from "@icp-sdk/core/principal";
+
+const MOCK_TOKEN = "mock-admin-token-123";
 
 export const mockBackend: backendInterface = {
-  assignRole: async (_user: Principal, _role: UserRole): Promise<void> => {
+  signup: async (_username: string, _password: string): Promise<AuthResult> => ({
+    __kind__: "ok",
+    ok: MOCK_TOKEN,
+  }),
+
+  login: async (_username: string, _password: string): Promise<AuthResult> => ({
+    __kind__: "ok",
+    ok: MOCK_TOKEN,
+  }),
+
+  logout: async (_token: string): Promise<void> => {
     return undefined;
   },
 
-  createStudent: async (req) => ({
+  getSession: async (token: string): Promise<SessionInfo | null> => {
+    if (token === MOCK_TOKEN) {
+      return { username: "admin", role: UserRole.admin };
+    }
+    return null;
+  },
+
+  createStaff: async (
+    _adminToken: string,
+    _username: string,
+    _password: string,
+  ): Promise<AuthResult> => ({
+    __kind__: "ok",
+    ok: "new-staff-token",
+  }),
+
+  listStaff: async (_adminToken: string): Promise<StaffInfo[]> => [
+    { username: "admin", role: UserRole.admin },
+    { username: "staff1", role: UserRole.staff },
+  ],
+
+  deleteStaff: async (_adminToken: string, _username: string): Promise<boolean> => true,
+
+  createStudent: async (_token: string, req) => ({
     id: BigInt(3),
     name: req.name,
     mobileNumber: req.mobileNumber,
@@ -32,11 +66,9 @@ export const mockBackend: backendInterface = {
     },
   }),
 
-  deleteStudent: async (_id) => true,
+  deleteStudent: async (_token: string, _id) => true,
 
-  getMyRole: async () => UserRole.admin,
-
-  getStudent: async (_id) => ({
+  getStudent: async (_token: string, _id) => ({
     id: BigInt(1),
     name: "Ravi Kumar Sharma",
     mobileNumber: "9876543210",
@@ -61,7 +93,7 @@ export const mockBackend: backendInterface = {
     },
   }),
 
-  listStudents: async () => [
+  listStudents: async (_token: string) => [
     {
       id: BigInt(1),
       name: "Ravi Kumar Sharma",
@@ -135,8 +167,6 @@ export const mockBackend: backendInterface = {
       },
     },
   ],
-
-  login: async () => UserRole.admin,
 
   setAdmissionFeeStatus: async () => true,
 

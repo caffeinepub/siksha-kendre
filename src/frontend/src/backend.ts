@@ -89,6 +89,13 @@ export class ExternalBlob {
         return this;
     }
 }
+export type AuthResult = {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export interface StudentPublic {
     id: StudentId;
     admissionFee: AdmissionFee;
@@ -99,6 +106,10 @@ export interface StudentPublic {
     mobileNumber: string;
     fatherName: string;
     monthlyFees: MonthlyFee;
+}
+export interface SessionInfo {
+    username: string;
+    role: UserRole;
 }
 export interface AdmissionFee {
     status: PaymentStatus;
@@ -113,6 +124,11 @@ export interface UpdateStudentRequest {
     mobileNumber: string;
     fatherName: string;
 }
+export interface StaffInfo {
+    username: string;
+    role: UserRole;
+}
+export type StudentId = bigint;
 export interface MonthlyFee {
     apr: PaymentStatus;
     aug: PaymentStatus;
@@ -127,7 +143,6 @@ export interface MonthlyFee {
     oct: PaymentStatus;
     sep: PaymentStatus;
 }
-export type StudentId = bigint;
 export interface CreateStudentRequest {
     dateOfBirth: string;
     class: StudentClass;
@@ -154,167 +169,229 @@ export enum StudentClass {
 }
 export enum UserRole {
     admin = "admin",
-    user = "user",
-    guest = "guest"
+    staff = "staff"
 }
 export interface backendInterface {
-    assignRole(user: Principal, role: UserRole): Promise<void>;
-    createStudent(req: CreateStudentRequest): Promise<StudentPublic>;
-    deleteStudent(id: StudentId): Promise<boolean>;
-    getMyRole(): Promise<UserRole>;
-    getStudent(id: StudentId): Promise<StudentPublic | null>;
-    listStudents(): Promise<Array<StudentPublic>>;
-    login(): Promise<UserRole>;
-    setAdmissionFeeStatus(id: StudentId, status: PaymentStatus, paymentMethod: PaymentMethod | null): Promise<boolean>;
-    setMonthlyFeeStatus(id: StudentId, month: string, status: PaymentStatus): Promise<boolean>;
-    updateStudent(req: UpdateStudentRequest): Promise<boolean>;
+    createStaff(adminToken: string, username: string, password: string): Promise<AuthResult>;
+    createStudent(token: string, req: CreateStudentRequest): Promise<StudentPublic>;
+    deleteStaff(adminToken: string, username: string): Promise<boolean>;
+    deleteStudent(token: string, id: StudentId): Promise<boolean>;
+    getSession(token: string): Promise<SessionInfo | null>;
+    getStudent(token: string, id: StudentId): Promise<StudentPublic | null>;
+    listStaff(adminToken: string): Promise<Array<StaffInfo>>;
+    listStudents(token: string): Promise<Array<StudentPublic>>;
+    login(username: string, password: string): Promise<AuthResult>;
+    logout(token: string): Promise<void>;
+    setAdmissionFeeStatus(token: string, id: StudentId, status: PaymentStatus, paymentMethod: PaymentMethod | null): Promise<boolean>;
+    setMonthlyFeeStatus(token: string, id: StudentId, month: string, status: PaymentStatus): Promise<boolean>;
+    signup(username: string, password: string): Promise<AuthResult>;
+    updateStudent(token: string, req: UpdateStudentRequest): Promise<boolean>;
 }
-import type { AdmissionFee as _AdmissionFee, CreateStudentRequest as _CreateStudentRequest, MonthlyFee as _MonthlyFee, PaymentMethod as _PaymentMethod, PaymentStatus as _PaymentStatus, StudentClass as _StudentClass, StudentId as _StudentId, StudentPublic as _StudentPublic, UpdateStudentRequest as _UpdateStudentRequest, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { AdmissionFee as _AdmissionFee, AuthResult as _AuthResult, CreateStudentRequest as _CreateStudentRequest, MonthlyFee as _MonthlyFee, PaymentMethod as _PaymentMethod, PaymentStatus as _PaymentStatus, SessionInfo as _SessionInfo, StaffInfo as _StaffInfo, StudentClass as _StudentClass, StudentId as _StudentId, StudentPublic as _StudentPublic, UpdateStudentRequest as _UpdateStudentRequest, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async assignRole(arg0: Principal, arg1: UserRole): Promise<void> {
+    async createStaff(arg0: string, arg1: string, arg2: string): Promise<AuthResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.assignRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
-                return result;
+                const result = await this.actor.createStaff(arg0, arg1, arg2);
+                return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.assignRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
-            return result;
+            const result = await this.actor.createStaff(arg0, arg1, arg2);
+            return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async createStudent(arg0: CreateStudentRequest): Promise<StudentPublic> {
+    async createStudent(arg0: string, arg1: CreateStudentRequest): Promise<StudentPublic> {
         if (this.processError) {
             try {
-                const result = await this.actor.createStudent(to_candid_CreateStudentRequest_n3(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.createStudent(arg0, to_candid_CreateStudentRequest_n3(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_StudentPublic_n7(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createStudent(to_candid_CreateStudentRequest_n3(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.createStudent(arg0, to_candid_CreateStudentRequest_n3(this._uploadFile, this._downloadFile, arg1));
             return from_candid_StudentPublic_n7(this._uploadFile, this._downloadFile, result);
         }
     }
-    async deleteStudent(arg0: StudentId): Promise<boolean> {
+    async deleteStaff(arg0: string, arg1: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteStudent(arg0);
+                const result = await this.actor.deleteStaff(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteStudent(arg0);
+            const result = await this.actor.deleteStaff(arg0, arg1);
             return result;
         }
     }
-    async getMyRole(): Promise<UserRole> {
+    async deleteStudent(arg0: string, arg1: StudentId): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.getMyRole();
-                return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getMyRole();
-            return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getStudent(arg0: StudentId): Promise<StudentPublic | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getStudent(arg0);
-                return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getStudent(arg0);
-            return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async listStudents(): Promise<Array<StudentPublic>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.listStudents();
-                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.listStudents();
-            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async login(): Promise<UserRole> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.login();
-                return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.login();
-            return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async setAdmissionFeeStatus(arg0: StudentId, arg1: PaymentStatus, arg2: PaymentMethod | null): Promise<boolean> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.setAdmissionFeeStatus(arg0, to_candid_PaymentStatus_n24(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n26(this._uploadFile, this._downloadFile, arg2));
+                const result = await this.actor.deleteStudent(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setAdmissionFeeStatus(arg0, to_candid_PaymentStatus_n24(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n26(this._uploadFile, this._downloadFile, arg2));
+            const result = await this.actor.deleteStudent(arg0, arg1);
             return result;
         }
     }
-    async setMonthlyFeeStatus(arg0: StudentId, arg1: string, arg2: PaymentStatus): Promise<boolean> {
+    async getSession(arg0: string): Promise<SessionInfo | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.setMonthlyFeeStatus(arg0, arg1, to_candid_PaymentStatus_n24(this._uploadFile, this._downloadFile, arg2));
+                const result = await this.actor.getSession(arg0);
+                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSession(arg0);
+            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getStudent(arg0: string, arg1: StudentId): Promise<StudentPublic | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStudent(arg0, arg1);
+                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStudent(arg0, arg1);
+            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listStaff(arg0: string): Promise<Array<StaffInfo>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listStaff(arg0);
+                return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listStaff(arg0);
+            return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listStudents(arg0: string): Promise<Array<StudentPublic>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listStudents(arg0);
+                return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listStudents(arg0);
+            return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async login(arg0: string, arg1: string): Promise<AuthResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.login(arg0, arg1);
+                return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.login(arg0, arg1);
+            return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async logout(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.logout(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setMonthlyFeeStatus(arg0, arg1, to_candid_PaymentStatus_n24(this._uploadFile, this._downloadFile, arg2));
+            const result = await this.actor.logout(arg0);
             return result;
         }
     }
-    async updateStudent(arg0: UpdateStudentRequest): Promise<boolean> {
+    async setAdmissionFeeStatus(arg0: string, arg1: StudentId, arg2: PaymentStatus, arg3: PaymentMethod | null): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateStudent(to_candid_UpdateStudentRequest_n29(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.setAdmissionFeeStatus(arg0, arg1, to_candid_PaymentStatus_n29(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n31(this._uploadFile, this._downloadFile, arg3));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateStudent(to_candid_UpdateStudentRequest_n29(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.setAdmissionFeeStatus(arg0, arg1, to_candid_PaymentStatus_n29(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n31(this._uploadFile, this._downloadFile, arg3));
+            return result;
+        }
+    }
+    async setMonthlyFeeStatus(arg0: string, arg1: StudentId, arg2: string, arg3: PaymentStatus): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setMonthlyFeeStatus(arg0, arg1, arg2, to_candid_PaymentStatus_n29(this._uploadFile, this._downloadFile, arg3));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setMonthlyFeeStatus(arg0, arg1, arg2, to_candid_PaymentStatus_n29(this._uploadFile, this._downloadFile, arg3));
+            return result;
+        }
+    }
+    async signup(arg0: string, arg1: string): Promise<AuthResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.signup(arg0, arg1);
+                return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.signup(arg0, arg1);
+            return from_candid_AuthResult_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async updateStudent(arg0: string, arg1: UpdateStudentRequest): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateStudent(arg0, to_candid_UpdateStudentRequest_n34(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateStudent(arg0, to_candid_UpdateStudentRequest_n34(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
 }
 function from_candid_AdmissionFee_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdmissionFee): AdmissionFee {
     return from_candid_record_n10(_uploadFile, _downloadFile, value);
+}
+function from_candid_AuthResult_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuthResult): AuthResult {
+    return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
 function from_candid_MonthlyFee_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MonthlyFee): MonthlyFee {
     return from_candid_record_n19(_uploadFile, _downloadFile, value);
@@ -325,19 +402,28 @@ function from_candid_PaymentMethod_n14(_uploadFile: (file: ExternalBlob) => Prom
 function from_candid_PaymentStatus_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PaymentStatus): PaymentStatus {
     return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
+function from_candid_SessionInfo_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SessionInfo): SessionInfo {
+    return from_candid_record_n22(_uploadFile, _downloadFile, value);
+}
+function from_candid_StaffInfo_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StaffInfo): StaffInfo {
+    return from_candid_record_n22(_uploadFile, _downloadFile, value);
+}
 function from_candid_StudentClass_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StudentClass): StudentClass {
     return from_candid_variant_n17(_uploadFile, _downloadFile, value);
 }
 function from_candid_StudentPublic_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StudentPublic): StudentPublic {
     return from_candid_record_n8(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n24(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_PaymentMethod]): PaymentMethod | null {
     return value.length === 0 ? null : from_candid_PaymentMethod_n14(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_StudentPublic]): StudentPublic | null {
+function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SessionInfo]): SessionInfo | null {
+    return value.length === 0 ? null : from_candid_SessionInfo_n21(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_StudentPublic]): StudentPublic | null {
     return value.length === 0 ? null : from_candid_StudentPublic_n7(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -392,6 +478,18 @@ function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uin
         nov: from_candid_PaymentStatus_n11(_uploadFile, _downloadFile, value.nov),
         oct: from_candid_PaymentStatus_n11(_uploadFile, _downloadFile, value.oct),
         sep: from_candid_PaymentStatus_n11(_uploadFile, _downloadFile, value.sep)
+    };
+}
+function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    username: string;
+    role: _UserRole;
+}): {
+    username: string;
+    role: UserRole;
+} {
+    return {
+        username: value.username,
+        role: from_candid_UserRole_n23(_uploadFile, _downloadFile, value.role)
     };
 }
 function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -456,40 +554,57 @@ function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): StudentClass {
     return "Class1" in value ? StudentClass.Class1 : "Class2" in value ? StudentClass.Class2 : "Class3" in value ? StudentClass.Class3 : "Class4" in value ? StudentClass.Class4 : "Class5" in value ? StudentClass.Class5 : "Nursery" in value ? StudentClass.Nursery : value;
 }
-function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: string;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
-    user: null;
-} | {
-    guest: null;
+    staff: null;
 }): UserRole {
-    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+    return "admin" in value ? UserRole.admin : "staff" in value ? UserRole.staff : value;
 }
-function from_candid_vec_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_StudentPublic>): Array<StudentPublic> {
+function from_candid_vec_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_StaffInfo>): Array<StaffInfo> {
+    return value.map((x)=>from_candid_StaffInfo_n27(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_StudentPublic>): Array<StudentPublic> {
     return value.map((x)=>from_candid_StudentPublic_n7(_uploadFile, _downloadFile, x));
 }
 function to_candid_CreateStudentRequest_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CreateStudentRequest): _CreateStudentRequest {
     return to_candid_record_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_PaymentMethod_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod): _PaymentMethod {
-    return to_candid_variant_n28(_uploadFile, _downloadFile, value);
+function to_candid_PaymentMethod_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod): _PaymentMethod {
+    return to_candid_variant_n33(_uploadFile, _downloadFile, value);
 }
-function to_candid_PaymentStatus_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentStatus): _PaymentStatus {
-    return to_candid_variant_n25(_uploadFile, _downloadFile, value);
+function to_candid_PaymentStatus_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentStatus): _PaymentStatus {
+    return to_candid_variant_n30(_uploadFile, _downloadFile, value);
 }
 function to_candid_StudentClass_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: StudentClass): _StudentClass {
     return to_candid_variant_n6(_uploadFile, _downloadFile, value);
 }
-function to_candid_UpdateStudentRequest_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UpdateStudentRequest): _UpdateStudentRequest {
-    return to_candid_record_n30(_uploadFile, _downloadFile, value);
+function to_candid_UpdateStudentRequest_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UpdateStudentRequest): _UpdateStudentRequest {
+    return to_candid_record_n35(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
-    return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+function to_candid_opt_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod | null): [] | [_PaymentMethod] {
+    return value === null ? candid_none() : candid_some(to_candid_PaymentMethod_n32(_uploadFile, _downloadFile, value));
 }
-function to_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod | null): [] | [_PaymentMethod] {
-    return value === null ? candid_none() : candid_some(to_candid_PaymentMethod_n27(_uploadFile, _downloadFile, value));
-}
-function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: StudentId;
     dateOfBirth: string;
     class: StudentClass;
@@ -540,22 +655,7 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         fatherName: value.fatherName
     };
 }
-function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
-    admin: null;
-} | {
-    user: null;
-} | {
-    guest: null;
-} {
-    return value == UserRole.admin ? {
-        admin: null
-    } : value == UserRole.user ? {
-        user: null
-    } : value == UserRole.guest ? {
-        guest: null
-    } : value;
-}
-function to_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentStatus): {
+function to_candid_variant_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentStatus): {
     Paid: null;
 } | {
     Pending: null;
@@ -566,7 +666,7 @@ function to_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint
         Pending: null
     } : value;
 }
-function to_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod): {
+function to_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PaymentMethod): {
     UPI: null;
 } | {
     Cash: null;

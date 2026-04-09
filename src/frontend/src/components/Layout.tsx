@@ -1,12 +1,8 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, UserPlus, Users } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { UserRole } from "../backend.d";
+import { useAuth } from "../hooks/useAuth";
 import Header from "./Header";
-
-const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/students", icon: Users, label: "Students" },
-  { to: "/students/new", icon: UserPlus, label: "Add Student" },
-];
 
 function NavItem({
   to,
@@ -34,6 +30,16 @@ function NavItem({
 }
 
 export default function Layout() {
+  const { role } = useAuth();
+  const isAdmin = role === UserRole.admin;
+
+  const navItems = [
+    { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/students", icon: Users, label: "Students" },
+    { to: "/students/new", icon: UserPlus, label: "Add Student" },
+    ...(isAdmin ? [{ to: "/staff", icon: ShieldCheck, label: "Staff" }] : []),
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />

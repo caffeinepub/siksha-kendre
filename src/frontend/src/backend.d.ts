@@ -7,6 +7,13 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export type AuthResult = {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export interface StudentPublic {
     id: StudentId;
     admissionFee: AdmissionFee;
@@ -17,6 +24,10 @@ export interface StudentPublic {
     mobileNumber: string;
     fatherName: string;
     monthlyFees: MonthlyFee;
+}
+export interface SessionInfo {
+    username: string;
+    role: UserRole;
 }
 export interface AdmissionFee {
     status: PaymentStatus;
@@ -31,6 +42,11 @@ export interface UpdateStudentRequest {
     mobileNumber: string;
     fatherName: string;
 }
+export interface StaffInfo {
+    username: string;
+    role: UserRole;
+}
+export type StudentId = bigint;
 export interface MonthlyFee {
     apr: PaymentStatus;
     aug: PaymentStatus;
@@ -45,7 +61,6 @@ export interface MonthlyFee {
     oct: PaymentStatus;
     sep: PaymentStatus;
 }
-export type StudentId = bigint;
 export interface CreateStudentRequest {
     dateOfBirth: string;
     class: StudentClass;
@@ -72,18 +87,21 @@ export enum StudentClass {
 }
 export enum UserRole {
     admin = "admin",
-    user = "user",
-    guest = "guest"
+    staff = "staff"
 }
 export interface backendInterface {
-    assignRole(user: Principal, role: UserRole): Promise<void>;
-    createStudent(req: CreateStudentRequest): Promise<StudentPublic>;
-    deleteStudent(id: StudentId): Promise<boolean>;
-    getMyRole(): Promise<UserRole>;
-    getStudent(id: StudentId): Promise<StudentPublic | null>;
-    listStudents(): Promise<Array<StudentPublic>>;
-    login(): Promise<UserRole>;
-    setAdmissionFeeStatus(id: StudentId, status: PaymentStatus, paymentMethod: PaymentMethod | null): Promise<boolean>;
-    setMonthlyFeeStatus(id: StudentId, month: string, status: PaymentStatus): Promise<boolean>;
-    updateStudent(req: UpdateStudentRequest): Promise<boolean>;
+    createStaff(adminToken: string, username: string, password: string): Promise<AuthResult>;
+    createStudent(token: string, req: CreateStudentRequest): Promise<StudentPublic>;
+    deleteStaff(adminToken: string, username: string): Promise<boolean>;
+    deleteStudent(token: string, id: StudentId): Promise<boolean>;
+    getSession(token: string): Promise<SessionInfo | null>;
+    getStudent(token: string, id: StudentId): Promise<StudentPublic | null>;
+    listStaff(adminToken: string): Promise<Array<StaffInfo>>;
+    listStudents(token: string): Promise<Array<StudentPublic>>;
+    login(username: string, password: string): Promise<AuthResult>;
+    logout(token: string): Promise<void>;
+    setAdmissionFeeStatus(token: string, id: StudentId, status: PaymentStatus, paymentMethod: PaymentMethod | null): Promise<boolean>;
+    setMonthlyFeeStatus(token: string, id: StudentId, month: string, status: PaymentStatus): Promise<boolean>;
+    signup(username: string, password: string): Promise<AuthResult>;
+    updateStudent(token: string, req: UpdateStudentRequest): Promise<boolean>;
 }

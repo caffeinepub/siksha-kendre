@@ -20,4 +20,31 @@ module {
     #Class4;
     #Class5;
   };
+
+  // Auth types
+  public type UserRole = {
+    #admin;
+    #staff;
+  };
+
+  public type UserAccount = {
+    username : Text;
+    var passwordHash : Text;
+    role : UserRole;
+  };
+
+  public type SessionInfo = {
+    username : Text;
+    role : UserRole;
+  };
+
+  public type AuthResult = {
+    #ok : Text; // session token
+    #err : Text; // error message
+  };
+
+  public type StaffInfo = {
+    username : Text;
+    role : UserRole;
+  };
 };

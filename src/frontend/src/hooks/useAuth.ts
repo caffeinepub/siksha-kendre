@@ -1,125 +1,120 @@
-import { useInternetIdentity } from "@caffeineai/core-infrastructure";
+import { useActor } from "@caffeineai/core-infrastructure";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { createActor } from "../backend";
+import type { UserRole } from "../backend.d";
 
-export function useAuth() {
-  const { login, clear, isLoginSuccess, identity, loginStatus } =
-    useInternetIdentity();
+const TOKEN_KEY = "sk_session_token";
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  username: string | null;
+  role: UserRole | null;
+  token: string | null;
+  loginError: string | null;
+  login: (username: string, password: string) => Promise<void>;
+  signup: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export function useAuth(): AuthState {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem(TOKEN_KEY),
+  );
+  const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
-  // Local flag for immediate UI feedback — set BEFORE the await, cleared in finally.
-  const [isLoginInProgress, setIsLoginInProgress] = useState(false);
-  // Guard against double-invocation in Strict Mode / concurrent renders.
-  const loginInFlightRef = useRef(false);
 
-  const isAuthenticated = !!identity && isLoginSuccess;
-
-  // isLoading:
-  //   - True only while we're actively in a login attempt OR the II hook is initializing.
-  //   - 'idle' alone is NOT treated as loading — it's the stable "not logged in" state.
-  //   - Never stays true indefinitely; 'idle'/'loginError' with no identity → show login page.
-  const isLoading =
-    isLoginInProgress ||
-    loginStatus === "logging-in" ||
-    loginStatus === "initializing";
-
-  // Watch loginStatus transitions so we always stay in sync with the underlying hook,
-  // even if the login Promise resolves before the status updates (race on live).
+  // On mount / actor ready: validate stored token
   useEffect(() => {
-    if (loginStatus === "success") {
-      // Login succeeded — clear any in-progress/error state.
-      setIsLoginInProgress(false);
-      setLoginError(null);
-      loginInFlightRef.current = false;
-      queryClient.invalidateQueries().catch(() => {});
-    } else if (loginStatus === "loginError") {
-      // Hook itself reached an error state.
-      setIsLoginInProgress(false);
-      loginInFlightRef.current = false;
-      setLoginError((prev) =>
-        prev
-          ? prev
-          : "Login failed. Please allow pop-ups for this site and try again.",
-      );
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    if (!actor) return;
+    if (!storedToken) {
+      setIsLoading(false);
+      return;
     }
-  }, [loginStatus, queryClient]);
-
-  const handleLogin = async () => {
-    // Prevent concurrent calls.
-    if (loginInFlightRef.current) return;
-    loginInFlightRef.current = true;
-
-    setLoginError(null);
-    setIsLoginInProgress(true);
-
-    try {
-      await login();
-      // On success the useEffect above will fire as loginStatus → 'success'.
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error);
-      const msgLower = msg.toLowerCase();
-
-      // "already authenticated" — clear the stale session and retry once.
-      if (msgLower.includes("already")) {
-        try {
-          await clear();
-          await new Promise<void>((resolve) => setTimeout(resolve, 400));
-          await login();
-          // If retry succeeded, useEffect will handle state cleanup.
-          return;
-        } catch (retryError: unknown) {
-          const retryMsg =
-            retryError instanceof Error
-              ? retryError.message
-              : String(retryError);
-          const retryLower = retryMsg.toLowerCase();
-          console.error("Login retry error:", retryError);
-          setLoginError(
-            retryLower.includes("cancel") || retryLower.includes("closed")
-              ? "Login was cancelled. Please try again."
-              : "Login failed after retry. Please refresh the page and try again.",
-          );
+    actor
+      .getSession(storedToken)
+      .then((info) => {
+        if (info) {
+          setToken(storedToken);
+          setUsername(info.username);
+          setRole(info.role);
+        } else {
+          localStorage.removeItem(TOKEN_KEY);
+          setToken(null);
         }
-      } else if (
-        msgLower.includes("popup") ||
-        msgLower.includes("blocked") ||
-        msgLower.includes("window")
-      ) {
-        setLoginError(
-          "Pop-up was blocked. Please allow pop-ups for this site in your browser and try again.",
-        );
-      } else if (
-        msgLower.includes("cancel") ||
-        msgLower.includes("closed") ||
-        msgLower.includes("abort")
-      ) {
-        setLoginError("Login was cancelled. Please try again.");
-      } else {
-        console.error("Login error:", error);
-        setLoginError(
-          `Login failed: ${msg}. Please allow pop-ups for this site and try again.`,
-        );
-      }
-    } finally {
-      // Always clear the in-progress flags so the button is never stuck.
-      setIsLoginInProgress(false);
-      loginInFlightRef.current = false;
+      })
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+        setToken(null);
+      })
+      .finally(() => setIsLoading(false));
+  }, [actor]);
+
+  const login = async (u: string, p: string) => {
+    if (!actor) throw new Error("Not connected");
+    setLoginError(null);
+    const result = await actor.login(u.trim(), p);
+    if (result.__kind__ === "err") {
+      setLoginError(result.err);
+      return;
     }
+    const newToken = result.ok;
+    localStorage.setItem(TOKEN_KEY, newToken);
+    setToken(newToken);
+    const info = await actor.getSession(newToken);
+    if (info) {
+      setUsername(info.username);
+      setRole(info.role);
+    }
+    queryClient.invalidateQueries().catch(() => {});
   };
 
-  const handleLogout = async () => {
-    await clear();
+  const signup = async (u: string, p: string) => {
+    if (!actor) throw new Error("Not connected");
+    setLoginError(null);
+    const result = await actor.signup(u.trim(), p);
+    if (result.__kind__ === "err") {
+      setLoginError(result.err);
+      return;
+    }
+    const newToken = result.ok;
+    localStorage.setItem(TOKEN_KEY, newToken);
+    setToken(newToken);
+    const info = await actor.getSession(newToken);
+    if (info) {
+      setUsername(info.username);
+      setRole(info.role);
+    }
+    queryClient.invalidateQueries().catch(() => {});
+  };
+
+  const logout = async () => {
+    if (actor && token) {
+      await actor.logout(token).catch(() => {});
+    }
+    localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setUsername(null);
+    setRole(null);
     queryClient.clear();
   };
 
   return {
-    isAuthenticated,
+    isAuthenticated: !!token && !!username,
     isLoading,
-    identity,
-    login: handleLogin,
-    logout: handleLogout,
-    isLoginSuccess,
+    username,
+    role,
+    token,
     loginError,
-    loginStatus,
+    login,
+    signup,
+    logout,
   };
 }

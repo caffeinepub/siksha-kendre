@@ -8,30 +8,33 @@ import type {
   StudentId,
   StudentPublic,
 } from "../types";
+import { useAuth } from "./useAuth";
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export function useStudents() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   return useQuery<StudentPublic[]>({
     queryKey: ["students"],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.listStudents();
+      if (!actor || !token) return [];
+      return actor.listStudents(token);
     },
-    enabled: !!actor,
+    enabled: !!actor && !!token,
   });
 }
 
 export function useStudent(id: StudentId | null) {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   return useQuery<StudentPublic | null>({
     queryKey: ["student", id?.toString()],
     queryFn: async () => {
-      if (!actor || id === null) return null;
-      return actor.getStudent(id);
+      if (!actor || id === null || !token) return null;
+      return actor.getStudent(token, id);
     },
-    enabled: !!actor && id !== null,
+    enabled: !!actor && id !== null && !!token,
   });
 }
 
@@ -39,6 +42,7 @@ export function useStudent(id: StudentId | null) {
 
 export function useCreateStudent() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
@@ -50,8 +54,8 @@ export function useCreateStudent() {
       motherName: string;
       class: StudentClass;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.createStudent(input);
+      if (!actor || !token) throw new Error("Not connected");
+      return actor.createStudent(token, input);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["students"] }),
   });
@@ -59,6 +63,7 @@ export function useCreateStudent() {
 
 export function useUpdateStudent() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
@@ -71,8 +76,8 @@ export function useUpdateStudent() {
       motherName: string;
       class: StudentClass;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.updateStudent(req);
+      if (!actor || !token) throw new Error("Not connected");
+      return actor.updateStudent(token, req);
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["students"] });
@@ -83,12 +88,13 @@ export function useUpdateStudent() {
 
 export function useDeleteStudent() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: StudentId) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.deleteStudent(id);
+      if (!actor || !token) throw new Error("Not connected");
+      return actor.deleteStudent(token, id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["students"] }),
   });
@@ -96,6 +102,7 @@ export function useDeleteStudent() {
 
 export function useSetAdmissionFeeStatus() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
@@ -108,8 +115,8 @@ export function useSetAdmissionFeeStatus() {
       status: PaymentStatus;
       paymentMethod: PaymentMethod | null;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.setAdmissionFeeStatus(id, status, paymentMethod);
+      if (!actor || !token) throw new Error("Not connected");
+      return actor.setAdmissionFeeStatus(token, id, status, paymentMethod);
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["students"] });
@@ -120,6 +127,7 @@ export function useSetAdmissionFeeStatus() {
 
 export function useSetMonthlyFeeStatus() {
   const { actor } = useActor(createActor);
+  const { token } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
@@ -132,8 +140,8 @@ export function useSetMonthlyFeeStatus() {
       month: string;
       status: PaymentStatus;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.setMonthlyFeeStatus(id, month, status);
+      if (!actor || !token) throw new Error("Not connected");
+      return actor.setMonthlyFeeStatus(token, id, month, status);
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["students"] });

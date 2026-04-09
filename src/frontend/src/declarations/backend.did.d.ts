@@ -14,6 +14,8 @@ export interface AdmissionFee {
   'status' : PaymentStatus,
   'paymentMethod' : [] | [PaymentMethod],
 }
+export type AuthResult = { 'ok' : string } |
+  { 'err' : string };
 export interface CreateStudentRequest {
   'dateOfBirth' : string,
   'class' : StudentClass,
@@ -40,6 +42,8 @@ export type PaymentMethod = { 'UPI' : null } |
   { 'Cash' : null };
 export type PaymentStatus = { 'Paid' : null } |
   { 'Pending' : null };
+export interface SessionInfo { 'username' : string, 'role' : UserRole }
+export interface StaffInfo { 'username' : string, 'role' : UserRole }
 export type StudentClass = { 'Class1' : null } |
   { 'Class2' : null } |
   { 'Class3' : null } |
@@ -68,25 +72,28 @@ export interface UpdateStudentRequest {
   'fatherName' : string,
 }
 export type UserRole = { 'admin' : null } |
-  { 'user' : null } |
-  { 'guest' : null };
+  { 'staff' : null };
 export interface _SERVICE {
-  'assignRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createStudent' : ActorMethod<[CreateStudentRequest], StudentPublic>,
-  'deleteStudent' : ActorMethod<[StudentId], boolean>,
-  'getMyRole' : ActorMethod<[], UserRole>,
-  'getStudent' : ActorMethod<[StudentId], [] | [StudentPublic]>,
-  'listStudents' : ActorMethod<[], Array<StudentPublic>>,
-  'login' : ActorMethod<[], UserRole>,
+  'createStaff' : ActorMethod<[string, string, string], AuthResult>,
+  'createStudent' : ActorMethod<[string, CreateStudentRequest], StudentPublic>,
+  'deleteStaff' : ActorMethod<[string, string], boolean>,
+  'deleteStudent' : ActorMethod<[string, StudentId], boolean>,
+  'getSession' : ActorMethod<[string], [] | [SessionInfo]>,
+  'getStudent' : ActorMethod<[string, StudentId], [] | [StudentPublic]>,
+  'listStaff' : ActorMethod<[string], Array<StaffInfo>>,
+  'listStudents' : ActorMethod<[string], Array<StudentPublic>>,
+  'login' : ActorMethod<[string, string], AuthResult>,
+  'logout' : ActorMethod<[string], undefined>,
   'setAdmissionFeeStatus' : ActorMethod<
-    [StudentId, PaymentStatus, [] | [PaymentMethod]],
+    [string, StudentId, PaymentStatus, [] | [PaymentMethod]],
     boolean
   >,
   'setMonthlyFeeStatus' : ActorMethod<
-    [StudentId, string, PaymentStatus],
+    [string, StudentId, string, PaymentStatus],
     boolean
   >,
-  'updateStudent' : ActorMethod<[UpdateStudentRequest], boolean>,
+  'signup' : ActorMethod<[string, string], AuthResult>,
+  'updateStudent' : ActorMethod<[string, UpdateStudentRequest], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
