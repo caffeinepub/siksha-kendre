@@ -1,0 +1,91 @@
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UpdateStudentRequest = 
+ record {
+   class: StudentClass;
+   dateOfBirth: text;
+   fatherName: text;
+   id: StudentId;
+   mobileNumber: text;
+   motherName: text;
+   name: text;
+ };
+type StudentPublic = 
+ record {
+   admissionFee: AdmissionFee;
+   class: StudentClass;
+   dateOfBirth: text;
+   fatherName: text;
+   id: StudentId;
+   mobileNumber: text;
+   monthlyFees: MonthlyFee;
+   motherName: text;
+   name: text;
+ };
+type StudentId = nat;
+type StudentClass = 
+ variant {
+   Class1;
+   Class2;
+   Class3;
+   Class4;
+   Class5;
+   Nursery;
+ };
+type PaymentStatus = 
+ variant {
+   Paid;
+   Pending;
+ };
+type PaymentMethod = 
+ variant {
+   Cash;
+   UPI;
+ };
+type MonthlyFee = 
+ record {
+   apr: PaymentStatus;
+   aug: PaymentStatus;
+   dec: PaymentStatus;
+   feb: PaymentStatus;
+   jan: PaymentStatus;
+   jul: PaymentStatus;
+   jun: PaymentStatus;
+   mar: PaymentStatus;
+   may: PaymentStatus;
+   nov: PaymentStatus;
+   oct: PaymentStatus;
+   sep: PaymentStatus;
+ };
+type CreateStudentRequest = 
+ record {
+   class: StudentClass;
+   dateOfBirth: text;
+   fatherName: text;
+   mobileNumber: text;
+   motherName: text;
+   name: text;
+ };
+type AdmissionFee = 
+ record {
+   paymentMethod: opt PaymentMethod;
+   status: PaymentStatus;
+ };
+service : {
+  assignRole: (user: principal, role: UserRole) -> ();
+  createStudent: (req: CreateStudentRequest) -> (StudentPublic);
+  deleteStudent: (id: StudentId) -> (bool);
+  getMyRole: () -> (UserRole) query;
+  getStudent: (id: StudentId) -> (opt StudentPublic) query;
+  listStudents: () -> (vec StudentPublic) query;
+  login: () -> (UserRole);
+  setAdmissionFeeStatus: (id: StudentId, status: PaymentStatus,
+   paymentMethod: opt PaymentMethod) -> (bool);
+  setMonthlyFeeStatus: (id: StudentId, month: text, status: PaymentStatus) ->
+   (bool);
+  updateStudent: (req: UpdateStudentRequest) -> (bool);
+}

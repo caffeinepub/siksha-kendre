@@ -1,0 +1,70 @@
+// Version: 1.0.0
+type AdmissionFee__32002297 =
+  {
+    paymentMethod : ?PaymentMethod__814595932;
+    status : PaymentStatus__487580874
+  };
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type MonthlyFee__699688073 =
+  {
+    apr : PaymentStatus__487580874;
+    aug : PaymentStatus__487580874;
+    dec : PaymentStatus__487580874;
+    feb : PaymentStatus__487580874;
+    jan : PaymentStatus__487580874;
+    jul : PaymentStatus__487580874;
+    jun : PaymentStatus__487580874;
+    mar : PaymentStatus__487580874;
+    may : PaymentStatus__487580874;
+    nov : PaymentStatus__487580874;
+    oct : PaymentStatus__487580874;
+    sep : PaymentStatus__487580874
+  };
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type PaymentMethod__46913440 = {#Cash; #UPI};
+type PaymentMethod__814595932 = PaymentMethod__46913440;
+type PaymentStatus__1050999476 = {#Paid; #Pending};
+type PaymentStatus__487580874 = PaymentStatus__1050999476;
+type StudentClass__296768066 =
+  {#Class1; #Class2; #Class3; #Class4; #Class5; #Nursery};
+type StudentClass__773133380 = StudentClass__296768066;
+type StudentId__381756952 = StudentId__585118929;
+type StudentId__585118929 = Nat;
+type Student__26715999 =
+  {
+    var admissionFee : AdmissionFee__32002297;
+    var class_ : StudentClass__773133380;
+    var dateOfBirth : Text;
+    var fatherName : Text;
+    id : StudentId__381756952;
+    var mobileNumber : Text;
+    var monthlyFees : MonthlyFee__699688073;
+    var motherName : Text;
+    var name : Text
+  };
+type UserRole__78968553 = {#admin; #guest; #user};
+actor {
+  stable accessControlState :
+    {
+      var initialized : Bool;
+      roles : Map__605269027<Principal, UserRole__78968553>
+    };
+  stable nextStudentId : {var value : Nat};
+  stable students :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Student__26715999]];
+      var elementIndex : Nat__490723111
+    }
+};

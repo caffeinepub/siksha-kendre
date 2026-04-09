@@ -1,0 +1,146 @@
+import type { backendInterface } from "../backend";
+import { PaymentMethod, PaymentStatus, StudentClass, UserRole } from "../backend";
+import type { Principal } from "@icp-sdk/core/principal";
+
+export const mockBackend: backendInterface = {
+  assignRole: async (_user: Principal, _role: UserRole): Promise<void> => {
+    return undefined;
+  },
+
+  createStudent: async (req) => ({
+    id: BigInt(3),
+    name: req.name,
+    mobileNumber: req.mobileNumber,
+    dateOfBirth: req.dateOfBirth,
+    class: req.class,
+    fatherName: req.fatherName,
+    motherName: req.motherName,
+    admissionFee: { status: PaymentStatus.Pending },
+    monthlyFees: {
+      jan: PaymentStatus.Pending,
+      feb: PaymentStatus.Pending,
+      mar: PaymentStatus.Pending,
+      apr: PaymentStatus.Pending,
+      may: PaymentStatus.Pending,
+      jun: PaymentStatus.Pending,
+      jul: PaymentStatus.Pending,
+      aug: PaymentStatus.Pending,
+      sep: PaymentStatus.Pending,
+      oct: PaymentStatus.Pending,
+      nov: PaymentStatus.Pending,
+      dec: PaymentStatus.Pending,
+    },
+  }),
+
+  deleteStudent: async (_id) => true,
+
+  getMyRole: async () => UserRole.admin,
+
+  getStudent: async (_id) => ({
+    id: BigInt(1),
+    name: "Ravi Kumar Sharma",
+    mobileNumber: "9876543210",
+    dateOfBirth: "2015-06-12",
+    class: StudentClass.Class3,
+    fatherName: "Rajesh Kumar Sharma",
+    motherName: "Sunita Sharma",
+    admissionFee: { status: PaymentStatus.Paid, paymentMethod: PaymentMethod.UPI },
+    monthlyFees: {
+      jan: PaymentStatus.Paid,
+      feb: PaymentStatus.Paid,
+      mar: PaymentStatus.Paid,
+      apr: PaymentStatus.Paid,
+      may: PaymentStatus.Paid,
+      jun: PaymentStatus.Pending,
+      jul: PaymentStatus.Pending,
+      aug: PaymentStatus.Pending,
+      sep: PaymentStatus.Pending,
+      oct: PaymentStatus.Pending,
+      nov: PaymentStatus.Pending,
+      dec: PaymentStatus.Pending,
+    },
+  }),
+
+  listStudents: async () => [
+    {
+      id: BigInt(1),
+      name: "Ravi Kumar Sharma",
+      mobileNumber: "9876543210",
+      dateOfBirth: "2015-06-12",
+      class: StudentClass.Class3,
+      fatherName: "Rajesh Kumar Sharma",
+      motherName: "Sunita Sharma",
+      admissionFee: { status: PaymentStatus.Paid, paymentMethod: PaymentMethod.UPI },
+      monthlyFees: {
+        jan: PaymentStatus.Paid,
+        feb: PaymentStatus.Paid,
+        mar: PaymentStatus.Paid,
+        apr: PaymentStatus.Paid,
+        may: PaymentStatus.Paid,
+        jun: PaymentStatus.Pending,
+        jul: PaymentStatus.Pending,
+        aug: PaymentStatus.Pending,
+        sep: PaymentStatus.Pending,
+        oct: PaymentStatus.Pending,
+        nov: PaymentStatus.Pending,
+        dec: PaymentStatus.Pending,
+      },
+    },
+    {
+      id: BigInt(2),
+      name: "Priya Singh",
+      mobileNumber: "9123456780",
+      dateOfBirth: "2017-03-22",
+      class: StudentClass.Nursery,
+      fatherName: "Suresh Singh",
+      motherName: "Meena Singh",
+      admissionFee: { status: PaymentStatus.Pending },
+      monthlyFees: {
+        jan: PaymentStatus.Paid,
+        feb: PaymentStatus.Paid,
+        mar: PaymentStatus.Pending,
+        apr: PaymentStatus.Pending,
+        may: PaymentStatus.Pending,
+        jun: PaymentStatus.Pending,
+        jul: PaymentStatus.Pending,
+        aug: PaymentStatus.Pending,
+        sep: PaymentStatus.Pending,
+        oct: PaymentStatus.Pending,
+        nov: PaymentStatus.Pending,
+        dec: PaymentStatus.Pending,
+      },
+    },
+    {
+      id: BigInt(3),
+      name: "Amit Verma",
+      mobileNumber: "9988776655",
+      dateOfBirth: "2013-09-08",
+      class: StudentClass.Class5,
+      fatherName: "Vinod Verma",
+      motherName: "Kavita Verma",
+      admissionFee: { status: PaymentStatus.Paid, paymentMethod: PaymentMethod.Cash },
+      monthlyFees: {
+        jan: PaymentStatus.Paid,
+        feb: PaymentStatus.Paid,
+        mar: PaymentStatus.Paid,
+        apr: PaymentStatus.Paid,
+        may: PaymentStatus.Paid,
+        jun: PaymentStatus.Paid,
+        jul: PaymentStatus.Paid,
+        aug: PaymentStatus.Paid,
+        sep: PaymentStatus.Paid,
+        oct: PaymentStatus.Pending,
+        nov: PaymentStatus.Pending,
+        dec: PaymentStatus.Pending,
+      },
+    },
+  ],
+
+  login: async () => UserRole.admin,
+
+  setAdmissionFeeStatus: async () => true,
+
+  setMonthlyFeeStatus: async () => true,
+
+  updateStudent: async () => true,
+};
